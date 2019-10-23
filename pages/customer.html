@@ -1,0 +1,223 @@
+
+<div class="customer" >
+	<div class="btns">
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">添加</button>
+		
+		<button id="btn_batch" type="button" class="btn btn-danger" style="margin-left:1em">批量删除</button>
+	</div>
+	<div class="input-group mb-3" style="max-width:400px;position:absolute;margin-top:-2.4em;margin-left:58%">
+		<input type="text" class="form-control" placeholder="请输入顾客姓名" aria-label="Recipient's username" aria-describedby="button-addon2">
+		<div class="input-group-append">
+		<button class="btn btn-outline-secondary" type="button" id="button-addon2">查询</button>
+		</div>
+	</div>
+
+	<table class="table table-hover" id="customer_tbl" style="margin-top:2em">
+		<thead>
+			<tr>
+				<th scope="col">编号</th>
+				<th scope="col">姓名</th>
+				<th scope="col">状态</th>
+				<th scope="col">手机号</th>
+				<th style="text-align:center" scope="col">操作</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalCenterTitle">添加顾客信息</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	       	<form>
+	       		<input type="text" name="id" style="display:none">
+				<div class="row">
+				<div class="col-2" style="margin-left:3em;margin-top:.5em">姓名</div>
+				<div class="col-8" style="margin-left:-2.5em">
+				  <input type="text" name="realname" class="form-control" placeholder="姓名">
+				</div>
+				</div>
+				<div class="row">
+				<div class="col-2" style="margin-left:3em;padding-top: 2.5em;">电话</div>
+				<div class="col-8" style="margin-left:-2.5em;margin-top:2em;">
+				  <input type="text" name="telephone" class="form-control" placeholder="电话">
+				</div>
+				</div>
+				<div class="row">
+				<div class="col-2" style="margin-left:3em;margin-top:2.5em">状态</div>
+				<div class="col-8" style="margin-left:-2.5em;margin-top:2em;">
+				  <input type="text" name="status" class="form-control" placeholder="状态">
+				</div>
+				</div>
+			</form>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+	        <button type="button" class="btn btn-primary" id="btn_add_customer">确定</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	
+
+	<!-- 删除操作提示框 -->
+	<div style="margin:0 auto;position: absolute;right:40px" class="toast" id="Toast" role="alert" aria-live="assertive" aria-atomic="true">
+	<div class="toast-header">
+	  <img src="..." class="rounded mr-2" alt="...">
+	  <strong class="mr-auto">删除信息提示</strong>
+	  
+	  <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+	    <span aria-hidden="true">&times;</span>
+	  </button>
+	</div>
+	<div class="toast-body">
+	 	删除成功
+	</div>
+	</div>
+
+
+
+</div>
+	
+
+<script>
+	$.ajaxSetup({
+		traditional:true,
+	})
+	var baseURL = "http://134.175.100.63:6677";
+	// 加载数据
+	function reloadData(){
+	var url = baseURL+"/customer/findAll";
+	$.get(url,function(response,status){
+		//1. 将tbody清空
+		$("#customer_tbl tbody").empty();
+		//2. 追加新的值
+		response.data.forEach(function(item){
+			var newTr = $(`<tr>
+				<td><input type="checkbox" value="`+item.id+`"></td>
+				<td>`+item.realname+`</td>
+				<td>`+item.status+`</td>
+				<td>`+item.telephone+`</td>
+				<td style="text-align:center">
+					<a class="btn_del btn btn-danger" href="#">删除</a>
+					<a class="btn_upd btn btn-primary" href="#">修改</a>
+				</td>
+			</tr>`);
+			$("#customer_tbl").append(newTr)
+		});
+	});
+	}
+
+
+// 文档加载完毕之后执行
+$(function(){
+	//调用重载数据
+	reloadData();
+	//保存和更新
+	$("#btn_add_customer").on('click',function(e){
+		
+		var data={};
+		data.id=$("input[name=id]").val();
+		// console.log(data.id)
+		data.realname=$("input[name=realname]").val();
+		data.telephone=$("input[name=telephone]").val();
+		data.status=$("input[name=status]").val();
+		// 下拉列表的数据获取和动态拼接节点
+		$.ajax({
+		type:"POST",
+		data:data,
+		url:"http://134.175.100.63:6677/customer/saveOrUpdate",
+		success:function(data){
+			// console.log(data)
+			$('#exampleModalCenter').modal('hide')
+			$("input[name=realname]").val("");
+			$("input[name=telephone]").val("");
+			$("input[name=status]").val("");
+			reloadData();
+		}});
+	})
+	//删除和修改
+	$("tbody").on('click',"a",function(evevt){
+		// 阻止默认动作
+		event.preventDefault();
+		// console.log(e.target.className)
+		if(event.target.className=="btn_del btn btn-danger"){
+
+			var id=$(this).parents('tr').find('input').val();
+			data = {
+				id:id
+			}
+			$.get("http://134.175.100.63:6677/customer/deleteById",data,function(result){
+				$('#Toast').toast('show')
+				reloadData();
+			})
+
+		}else{
+			$("input[name=id]").val($(this).parents('tr').find('input').val());
+			$("input[name=realname]").val($(this).parents('tr').find('td:nth-child(2)').text());
+			$("input[name=status]").val($(this).parents('tr').find('td:nth-child(3)').text());
+			$("input[name=telephone]").val($(this).parents('tr').find('td:nth-child(4)').text());
+			$('#exampleModalCenter').modal('show');
+		}
+	})
+	// 批量删除
+	$("#btn_batch").on('click',function(event){
+		var aaa = 
+		$('.table input:checked')
+		.toArray()
+		.map(function(item){
+			return parseInt(item.value);
+		})
+		// console.log(ids);
+		var url = 'http://134.175.100.63:6677/customer/batchDelete'
+		// console.log(aaa)
+		
+		param={'ids':aaa}
+		$.post(url,param,function(response){
+			// console.log(response);
+			reloadData();
+		})
+	})
+	$("#button-addon2").on('click',function(event){
+		var realname=event.target.parentElement.previousElementSibling.value;
+		var baseURL = "http://134.175.100.63:6677";
+		var url = baseURL+"/customer/findAll";
+		var arr=[];
+		$.get(url,function(response,status){
+		//1. 将tbody清空
+		//2. 追加新的值
+		// 将符合的顾客赛选出存放到数组里
+		arr=response.data.filter(function(item){
+				if(item.realname===realname)
+					return item;
+			});
+		if(arr.length===0){
+			alert("该顾客信息不存在");
+			reloadData();
+		}
+		$("#customer_tbl tbody").empty();
+		arr.forEach(function(item){
+			var newTr = $(`<tr>
+				<td><input type="checkbox" value="`+item.id+`"></td>
+				<td>`+item.realname+`</td>
+				<td>`+item.status+`</td>
+				<td>`+item.telephone+`</td>
+				<td style="text-align:center">
+					<a class="btn_del btn btn-danger" href="#">删除</a>
+					<a class="btn_upd btn btn-primary" href="#">修改</a>
+				</td>
+			</tr>`);
+			$("#customer_tbl").append(newTr)
+		});
+		});
+	})
+
+})
+</script>

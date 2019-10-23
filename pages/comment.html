@@ -1,0 +1,188 @@
+<div class="comment">
+	<div class="btns">
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">添加</button>
+		<button id="btn_batch" type="button" class="btn btn-danger" style="margin-left:1em">批量删除</button>
+	</div>
+	
+	
+
+	<table class="table table-hover" id="comment_tbl" style="margin-top:2em">
+		<thead>
+			<tr>
+				<th scope="col">编号</th>
+				<th scope="col">评论内容</th>
+				<th scope="col">评论时间</th>
+				<th scope="col">订单编号</th>
+				<th scope="col">操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			
+		</tbody>
+	</table>
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalCenterTitle">添加评论信息</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	       	<form>
+	       		<input type="text" name="id" style="display:none">
+				<div class="row">
+				<div class="col-3" style="margin-left:3em;margin-top:.5em">评论内容</div>
+				<div class="col-6" style="margin-left:-2.5em">
+				  <input type="text" name="content" class="form-control" placeholder="评论内容">
+				</div>
+				</div>
+				<div class="row">
+				<div class="col-3" style="margin-left:3em;padding-top: 2.5em;">评论时间</div>
+				<div class="col-6" style="margin-left:-2.5em;margin-top:2em;">
+				  <input type="text" name="commentTime" class="form-control" placeholder="评论时间">
+				</div>
+				</div>
+				 <div class="form-group row">
+				  	<div class="col-3" style="margin-left:3em;margin-top:2.5em;">订单编号</div>
+				    <select id="input_orderId" class="input_orderId form-control col-6" style="margin-left:-1em;margin-top:2em;">
+			  			<option value="" style="display: none;">请选择订单号</option>
+				    </select>
+				 </div>
+			</form>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+	        <button type="button" class="btn btn-primary" id="btn_add_comment">确定</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- modal结束 -->
+
+	<div style="margin:0 auto;" class="toast" id="Toast" role="alert" aria-live="assertive" aria-atomic="true">
+	<div class="toast-header">
+	  <img src="..." class="rounded mr-2" alt="...">
+	  <strong class="mr-auto">Bootstrap</strong>
+	  
+	  <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+	    <span aria-hidden="true">&times;</span>
+	  </button>
+	</div>
+	<div class="toast-body">
+	 	删除成功
+	</div>
+	</div>
+</div>
+
+<script>
+var baseURL = "http://134.175.100.63:6677";
+// 加载数据
+function reloadData(){
+	var url = baseURL+"/comment/findAll";
+	$.get(url,function(response,status){
+		//1. 将tbody清空
+		$("#comment_tbl tbody").empty();
+		//2. 追加新的值
+		response.data.forEach(function(item){
+			var newTr = $(`<tr>
+				<td><input type="checkbox" value="`+item.id+`"></td>
+				<td>`+item.content+`</td>
+				<td>`+item.commentTime+`</td>
+				<td>`+item.orderId+`</td>
+				<td>
+					<a class="btn_del btn btn-danger" href="#">删除</a>
+					<a class="btn_upd btn btn-primary" href="#">修改</a>
+				</td>
+			</tr>`);
+			$("#comment_tbl").append(newTr)
+		});
+	});
+}
+
+	// 查询所有订单的id
+	function searchOrderId(){
+		var url = baseURL+'/order/findAll';
+		$.get(url,function(result){
+			result.data.forEach(function(item){
+				var newOption = $(`
+					<option value="`+item.id+`">`+item.id+`</option>
+				`);
+				// 追加到模态框的下拉框中
+				$('#input_orderId').append(newOption);
+			});
+		});
+	}
+
+
+// 文档加载完毕之后执行
+$(function(){
+	//调用重载数据
+	reloadData();
+	searchOrderId();
+	//保存或更新
+	$('#btn_add_comment').on('click',function(e){
+		var data={};
+		data.id = $("input[name=id]").val();
+		data.content = $("input[name=content]").val();
+		data.commentTime = $("input[name=commentTime]").val();
+		data.orderId = $('#input_orderId').val();
+		// console.log(data);
+		$.ajax({
+			type:"POST",
+			data:data,
+			url:baseURL+"/comment/saveOrUpdate",
+			success:function(data){
+				$('#exampleModalCenter').modal('hide')
+				$("input[name=content]").val("");
+				$("input[name=commentTime]").val("");
+				$('#input_orderId').val("");
+				reloadData();
+			}
+		})
+	})
+	//删除和修改
+	$("tbody").on('click',"a",function(e){
+		e.preventDefault();
+		console.log(e.target.className)
+		if(e.target.className=="btn_del btn btn-danger"){
+
+			var id=$(this).parents('tr').find('input').val();
+			data = {
+				id:id
+			}
+			url=baseURL+"/comment/deleteById"
+			$.get(url,data,function(result){
+				$('#Toast').toast('show')
+				reloadData();
+			})
+
+		}else{
+			$("input[name=id]").val($(this).parents('tr').find('input').val());
+			$("input[name=content]").val($(this).parents('tr').find('td:nth-child(2)').text());
+			$("input[name=commentTime]").val($(this).parents('tr').find('td:nth-child(3)').text());
+			$('#input_orderId').val($(this).parents('tr').find('td:nth-child(4)').text());
+			$('#exampleModalCenter').modal('show')
+		}
+	})
+	// 批量删除
+	$("#btn_batch").on('click',function(e){
+		var aaa = 
+		$('.table input:checked')
+		.toArray()
+		.map(function(item){
+			return parseInt(item.value);
+		})
+		// console.log(ids);
+		var url = baseURL+'/comment/batchDelete'
+		console.log(aaa)
+		param={'ids':aaa}
+		$.post(url,param,function(response){
+			console.log(response);
+			reloadData();
+		})
+	})
+})
+</script>

@@ -1,0 +1,141 @@
+<div class="order">
+	<div class="btns">
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">添加</button>
+		<button id="btn_batch" type="button" class="btn btn-danger" style="margin-left:1em">批量删除</button>
+	</div>
+	
+
+	<table class="table table-hover" id="order_tbl" style="margin-top:2em">
+		<thead>
+			<tr>
+				<th scope="col">编号</th>
+				<th scope="col">订单时间</th>
+				<th scope="col">订单数量</th>
+				<th scope="col">操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			
+		</tbody>
+	</table>
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalCenterTitle">添加订单信息</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	       	<form>
+	       		<input type="text" name="id" style="display:none">
+				<div class="row">
+				<div class="col-2" style="margin-left:3em;margin-top:.5em">订单时间</div>
+				<div class="col-8" style="margin-left:-2.5em">
+				  <input type="text" name="orderTime" class="form-control" placeholder="订单时间">
+				</div>
+				</div>
+				<div class="row">
+				<div class="col-2" style="margin-left:3em;padding-top: 2.5em;">订单数量</div>
+				<div class="col-8" style="margin-left:-2.5em;margin-top:2em;">
+				  <input type="text" name="total" class="form-control" placeholder="订单数量">
+				</div>
+				</div>
+			</form>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+	        <button type="button" class="btn btn-primary" id="btn_add_order">确定</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- modal结束 -->
+</div>
+
+<script>
+var baseURL = "http://134.175.100.63:6677";
+// 加载数据
+function reloadData(){
+	var url = baseURL+"/order/findAll";
+	$.get(url,function(response,status){
+		//1. 将tbody清空
+		$("#order_tbl tbody").empty();
+		//2. 追加新的值
+		response.data.forEach(function(item){
+			var newTr = $(`<tr>
+				<td><input type="checkbox" value="`+item.id+`"></td>
+				<td>`+item.orderTime+`</td>
+				<td>`+item.total+`</td>
+				<td>
+					<a class="btn_del btn btn-danger" href="#">删除< /a>
+				</td>
+			</tr>`);
+			$("#order_tbl").append(newTr)
+		});
+	});
+}
+
+// 文档加载完毕之后执行
+$(function(){
+	//调用重载数据
+	reloadData();
+	//保存
+	$("#btn_add_order").on('click',function(e){
+		
+		var data={};
+		data.id=$("input[name=id]").val();
+		console.log(data.id)
+		data.orderTime=$("input[name=orderTime]").val();
+		data.total=$("input[name=total]").val();
+		// 下拉列表的数据获取和动态拼接节点
+		$.ajax({
+		type:"POST",
+		data:data,
+		// headers:{'Content-Type':'application/json;charset=utf8'},
+		url:baseURL+"/order/save",
+		success:function(data){
+			console.log(data.data)
+			$('#exampleModalCenter').modal('hide')
+			$("input[name=realname]").val("");
+			$("input[name=telephone]").val("");
+			$("input[name=password]").val("");
+			$("input[name=status]").val("");
+			reloadData();
+		}});
+	})
+	//删除和修改
+	$(".btn_del").on('click',function(e){
+
+		var id=$(this).parents('tr').find('input').val();
+		var url = baseURL+"/order/deleteById"
+		data = {
+				id:id
+			}
+		$.get(url,data,function(result){
+			$('#Toast').toast('show')
+			reloadData();
+			})
+		}
+	})
+	// 批量删除
+	$("#btn_batch").on('click',function(e){
+		var aaa = 
+		$('.table input:checked')
+		.toArray()
+		.map(function(item){
+			return parseInt(item.value);
+		})
+		// console.log(ids);
+		var url = baseURL+'/order/batchDelete'
+		console.log(aaa)
+		
+		param={'ids':aaa}
+		$.post(url,param,function(response){
+			console.log(response);
+			reloadData();
+		})
+	})
+</script>
