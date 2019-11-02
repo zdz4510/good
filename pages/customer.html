@@ -5,6 +5,7 @@
 		
 		<button id="btn_batch" type="button" class="btn btn-danger" style="margin-left:1em">批量删除</button>
 	</div>
+
 	<div class="input-group mb-3" style="max-width:400px;position:absolute;margin-top:-2.4em;margin-left:58%">
 		<input type="text" class="form-control" placeholder="请输入顾客姓名" aria-label="Recipient's username" aria-describedby="button-addon2">
 		<div class="input-group-append">
@@ -66,24 +67,6 @@
 	  </div>
 	</div>
 	
-
-	<!-- 删除操作提示框 -->
-	<div style="margin:0 auto;position: absolute;right:40px" class="toast" id="Toast" role="alert" aria-live="assertive" aria-atomic="true">
-	<div class="toast-header">
-	  <img src="..." class="rounded mr-2" alt="...">
-	  <strong class="mr-auto">删除信息提示</strong>
-	  
-	  <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-	    <span aria-hidden="true">&times;</span>
-	  </button>
-	</div>
-	<div class="toast-body">
-	 	删除成功
-	</div>
-	</div>
-
-
-
 </div>
 	
 
@@ -91,7 +74,7 @@
 	$.ajaxSetup({
 		traditional:true,
 	})
-	var baseURL = "http://134.175.100.63:6677";
+	var baseURL = "http://39.106.88.154:6677";
 	// 加载数据
 	function reloadData(){
 	var url = baseURL+"/customer/findAll";
@@ -128,18 +111,23 @@ $(function(){
 		// console.log(data.id)
 		data.realname=$("input[name=realname]").val();
 		data.telephone=$("input[name=telephone]").val();
+		// console.log(typeof data.telephone);
+		 if(!(/^1[3456789]\d{9}$/.test(data.telephone))){ 
+		        alert("手机号码有误，请重填");  
+		        return false; 
+		    } 
 		data.status=$("input[name=status]").val();
 		// 下拉列表的数据获取和动态拼接节点
 		$.ajax({
 		type:"POST",
 		data:data,
-		url:"http://134.175.100.63:6677/customer/saveOrUpdate",
+		url:baseURL+"/customer/saveOrUpdate",
 		success:function(data){
-			// console.log(data)
 			$('#exampleModalCenter').modal('hide')
 			$("input[name=realname]").val("");
 			$("input[name=telephone]").val("");
 			$("input[name=status]").val("");
+			alert(data.message);
 			reloadData();
 		}});
 	})
@@ -154,9 +142,13 @@ $(function(){
 			data = {
 				id:id
 			}
-			$.get("http://134.175.100.63:6677/customer/deleteById",data,function(result){
-				$('#Toast').toast('show')
-				reloadData();
+			$.get("http://39.106.88.154:6677/customer/deleteById",data,function(result){
+				if(result.status=200){
+					alert(result.message);
+					reloadData();
+				}else{
+					alert(result.message);
+				}
 			})
 
 		}else{
@@ -175,19 +167,23 @@ $(function(){
 		.map(function(item){
 			return parseInt(item.value);
 		})
-		// console.log(ids);
-		var url = 'http://134.175.100.63:6677/customer/batchDelete'
+		var url = baseURL+'/customer/batchDelete'
 		// console.log(aaa)
+		param={'ids':aaa};
+		if(aaa.length===0){
+			alert("请选择要批量删除的地址");
+		}else{
+			$.post(url,param,function(response){
+				// console.log(response);
+				alert(response.message)
+				reloadData();
+			})
+		}
 		
-		param={'ids':aaa}
-		$.post(url,param,function(response){
-			// console.log(response);
-			reloadData();
-		})
+		
 	})
 	$("#button-addon2").on('click',function(event){
 		var realname=event.target.parentElement.previousElementSibling.value;
-		var baseURL = "http://134.175.100.63:6677";
 		var url = baseURL+"/customer/findAll";
 		var arr=[];
 		$.get(url,function(response,status){

@@ -2,11 +2,11 @@
 	<!-- 按钮 -->
 	<div class="addressTop row">
 		<div class="btns col-6">
-			<button class="btn btn-info btn-sm" id="btn_add">添加</button>
-			<button class="btn btn-danger btn-sm" id="btn_batchDel">批量删除</button>
+			<button type="button" id="btn_add" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">添加</button>
+			<button id="btn_batchDel"  type="button" class="btn btn-danger" style="margin-left:1em">批量删除</button>
 		</div>
 		<div class="col-3 text-right">
-			<button class="btn btn-primary" id="btn_findAll">还原</button>
+			<button class="btn btn-primary" id="btn_findAll">返回到全部地址</button>
 		</div>
 		<div class="serach col-3">
 			<form>
@@ -21,7 +21,7 @@
 		<table class="table table-hover text-center">
 		  <thead>
 		    <tr>
-		      <th scope="col"><input type="checkbox"></th>
+		      <th scope="col">编号</th>
 		      <th scope="col">省份</th>
 		      <th scope="col">市</th>
 		      <th scope="col">地区</th>
@@ -109,7 +109,7 @@
 	</div>
 </div>
 <script>
-	var baseURL = 'http://134.175.100.63:6677';
+	var baseURL = 'http://39.106.88.154:6677';
 	// 该id是点击修改按钮时获取的id，设置为全局变量
 	var EditId;
 	// 查询所有数据
@@ -203,6 +203,7 @@
 
 		// 监听模态框的关闭，清空模态框内容
 		$('#addressModal').on('hidden.bs.modal', function(e){
+			// 表单清空
 		  $(this).find('form')[0].reset();
 		})
 
@@ -212,18 +213,24 @@
 			var ids = $(':checkbox:checked').map(function(index,item){
 				return $(item).val();
 			}).toArray();
-			var data = '';
-			for(index in ids){
-				if(index == 0){
-					data += 'ids='+ids[index]
-				}else{
-					data +='&ids='+ids[index]
+			console.log(ids.length)
+			if(ids.length===0){
+				alert("请选择要批量删除地址");
+			}else{
+				var data = '';
+				for(index in ids){
+					if(index == 0){
+						data += 'ids='+ids[index]
+					}else{
+						data +='&ids='+ids[index]
+					}
 				}
+				$.post(url_batchDel,data,function(result){
+					alert(result.message);
+					loadData();
+				})
 			}
-			$.post(url_batchDel,data,function(result){
-				console.log(result);
-				loadData();
-			})
+			
 		})
 
 		// 添加或修改数据
@@ -234,6 +241,10 @@
 			var address = $('#input_address').val();
 			var telephone = $('#input_telephone').val();
 			var customerId = $('#input_customerId').val();
+			if(!(/^1[3456789]\d{9}$/.test(telephone))){ 
+		        alert("手机号码有误，请重填");  
+		        return false; 
+		    }
 			if(EditId){
 					// id存在，即修改
 					var data = {
@@ -247,7 +258,7 @@
 					}
 					var url_editAddress = baseURL+'/address/saveOrUpdate';
 					$.post(url_editAddress,data,function(result){
-						console.log(result,'修改');
+						alert(result.message)
 						loadData();
 					});
 					// 将id置为空，否则点击修改后再次点击添加，还是修改

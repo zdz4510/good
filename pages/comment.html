@@ -34,15 +34,15 @@
 	       	<form>
 	       		<input type="text" name="id" style="display:none">
 				<div class="row">
-				<div class="col-3" style="margin-left:3em;margin-top:.5em">评论内容</div>
-				<div class="col-6" style="margin-left:-2.5em">
-				  <input type="text" name="content" class="form-control" placeholder="评论内容">
-				</div>
-				</div>
-				<div class="row">
 				<div class="col-3" style="margin-left:3em;padding-top: 2.5em;">评论时间</div>
 				<div class="col-6" style="margin-left:-2.5em;margin-top:2em;">
 				  <input type="text" name="commentTime" class="form-control" placeholder="评论时间">
+				</div>
+				</div>
+				<div class="row">
+				<div class="col-3" style="margin-left:3em;margin-top:.5em">评论内容</div>
+				<div class="col-6" style="margin-left:-2.5em;margin-top:.5em">
+				  <input type="textarea" style="width: 250px;height: 80px;" name="content" class="form-control" placeholder="评论内容">
 				</div>
 				</div>
 				 <div class="form-group row">
@@ -61,24 +61,10 @@
 	  </div>
 	</div>
 	<!-- modal结束 -->
-
-	<div style="margin:0 auto;" class="toast" id="Toast" role="alert" aria-live="assertive" aria-atomic="true">
-	<div class="toast-header">
-	  <img src="..." class="rounded mr-2" alt="...">
-	  <strong class="mr-auto">Bootstrap</strong>
-	  
-	  <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-	    <span aria-hidden="true">&times;</span>
-	  </button>
-	</div>
-	<div class="toast-body">
-	 	删除成功
-	</div>
-	</div>
 </div>
 
 <script>
-var baseURL = "http://134.175.100.63:6677";
+var baseURL = "http://39.106.88.154:6677";
 // 加载数据
 function reloadData(){
 	var url = baseURL+"/comment/findAll";
@@ -139,6 +125,7 @@ $(function(){
 				$("input[name=content]").val("");
 				$("input[name=commentTime]").val("");
 				$('#input_orderId').val("");
+				alert(data.message)
 				reloadData();
 			}
 		})
@@ -155,11 +142,12 @@ $(function(){
 			}
 			url=baseURL+"/comment/deleteById"
 			$.get(url,data,function(result){
-				$('#Toast').toast('show')
+				alert(result.message);
 				reloadData();
 			})
 
 		}else{
+			// alert(1);
 			$("input[name=id]").val($(this).parents('tr').find('input').val());
 			$("input[name=content]").val($(this).parents('tr').find('td:nth-child(2)').text());
 			$("input[name=commentTime]").val($(this).parents('tr').find('td:nth-child(3)').text());
@@ -174,15 +162,18 @@ $(function(){
 		.toArray()
 		.map(function(item){
 			return parseInt(item.value);
-		})
-		// console.log(ids);
+		});
 		var url = baseURL+'/comment/batchDelete'
-		console.log(aaa)
+		// console.log(aaa)
 		param={'ids':aaa}
-		$.post(url,param,function(response){
-			console.log(response);
-			reloadData();
-		})
+		if(aaa.length===0){
+			alert("请选择要删除的评论");
+		}else{
+			$.post(url,param,function(response){
+				alert(response.message);
+				reloadData();
+			})
+		}
 	})
 })
 </script>
